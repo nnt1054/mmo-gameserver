@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
-    "mini5-engine": "file:///mnt/c/Users/Neil/Documents/Ubuntu/mini5-engine",
+    "mini5-engine": "^1.0.2",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {
