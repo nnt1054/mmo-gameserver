@@ -92,12 +92,58 @@ class playerObject extends GameObject {
 			}
 		}
 
+		// Resolve Portal Collisions
+		var collisions = this.AABB.checkCollisions(this.scene.portalObjects);
+		var nextScene = null;
+		if (collisions.length > 0) {
+			for (var i = 0; i < collisions.length; i++) {
+	            nextScene = collisions[i].parent.nextScene
+			}
+		}
+		if (nextScene != null) {	        
+	        console.log("player should switch to scene: " + nextScene);
+	        // this is where we call the startTeleportProcess()
+	        this.startTeleportProcess(nextScene)
+	        	.then((data) => pingGameServer(data))
+	        	.then((url) => broadcastTeleportServer(this.socket, url))
+		}
+
 		// this.count = this.newCount;
 		// this.gameState = this.parent.gameState[this.name] = {x: this.x, y: this.y, connected: true};
 		this.gameState.x = this.x;
 		this.gameState.y = this.y;
 
 	}
+
+	async startTeleportProcess(nextScene) {
+		// broadcast teleport update to the client to transition to idle scene
+		this.scene.broadcastTeleport(this.socket, nextScene);
+
+		// ping server manager for the gameserver endpoint corresponding to nextScene
+		let url = 'http://localhost:8081/gameserver?scene=' + nextScene;
+		let response = await fetch(url);
+		let data = await response.json();
+
+		return data
+	}
+
+	async pingGameServer(endpoint) {
+		// http://test.docker-registry.com/test/2/socket.io
+		// http://test.docker-registry.com/test/2/health
+		let url = endpoint.origin + endpoint.pathname;
+		let healthurl = url.split('/').splice(-1, 1).join('/') + 'health'
+		let response = await fetch(url)
+		let data = await response.json();
+
+		// check if game server health is fine
+		if (data != null) {
+			return url
+		} else {
+			return url
+		}
+	}
+
+
 
 	// Resolves and sets AABB position based on colliding aabb, x-axis displacement, and y axis-displacement
 	handleCollision(aabb, xDisp, yDisp) {

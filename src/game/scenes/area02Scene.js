@@ -10,14 +10,14 @@ import {
 	playerManagerObject
 } from '../gameObjects/'
 
-class testScene extends Scene {
+class area02Scene extends Scene {
 
 	setup(args) {
 
 	    // instantiate game objects
 	    var background = new backgroundObject(this);
 	    var ground = new blockObject(this, 800*2, 32, -800, 400 - 32);
-	    var floating = new blockObject(this, 0, 32, 800/2, 400/2);
+	    var floating = new blockObject(this, 800/4, 32, 800/2, 400/2);
 	    var ball = new bouncingBallObject(this, 'blue');
 	    // var player = new playerObject(this);
 	    this.playerManager = new playerManagerObject(this);
@@ -53,4 +53,4 @@ class testScene extends Scene {
 
 }
 
-export default testScene;
+export default area02Scene;

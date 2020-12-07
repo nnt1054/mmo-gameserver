@@ -10,12 +10,12 @@ var _mini5Engine = require("mini5-engine");
 var _gameObjects = require("../gameObjects/");
 
 // import gameObjects
-class testScene extends _mini5Engine.Scene {
+class area02Scene extends _mini5Engine.Scene {
   setup(args) {
     // instantiate game objects
     var background = new _gameObjects.backgroundObject(this);
     var ground = new _gameObjects.blockObject(this, 800 * 2, 32, -800, 400 - 32);
-    var floating = new _gameObjects.blockObject(this, 0, 32, 800 / 2, 400 / 2);
+    var floating = new _gameObjects.blockObject(this, 800 / 4, 32, 800 / 2, 400 / 2);
     var ball = new _gameObjects.bouncingBallObject(this, 'blue'); // var player = new playerObject(this);
 
     this.playerManager = new _gameObjects.playerManagerObject(this); // create layers
@@ -47,5 +47,5 @@ class testScene extends _mini5Engine.Scene {
 
 }
 
-var _default = testScene;
+var _default = area02Scene;
 exports.default = _default;
