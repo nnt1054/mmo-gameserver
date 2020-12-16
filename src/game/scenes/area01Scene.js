@@ -44,7 +44,6 @@ class area01Scene extends Scene {
 	}
 
 	broadcastUpdates() {
-		// console.log(this.gameState);
 		this.engine.io.emit('gamestate', this.gameState);
 	}
 
