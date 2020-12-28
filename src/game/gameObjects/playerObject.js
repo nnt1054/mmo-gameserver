@@ -54,6 +54,8 @@ class playerObject extends GameObject {
 		var xDisp = 0,
 		yDisp = 0;
 
+
+		// need to move this to its own `inputManager` game object
 		if (this.inputState.xState == 'idle') {
 			xDisp = 0;
 		} else if (this.inputState.xState == 'movingLeft') {

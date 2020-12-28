@@ -17,7 +17,7 @@ class testScene extends Scene {
 	    // instantiate game objects
 	    var background = new backgroundObject(this);
 	    var ground = new blockObject(this, 800*2, 32, -800, 400 - 32);
-	    var floating = new blockObject(this, 0, 32, 800/2, 400/2);
+	    var floating = new blockObject(this, 800/2, 32, 800/2, 400/2);
 	    var ball = new bouncingBallObject(this, 'blue');
 	    // var player = new playerObject(this);
 	    this.playerManager = new playerManagerObject(this);
@@ -42,7 +42,6 @@ class testScene extends Scene {
 	}
 
 	broadcastUpdates() {
-		// console.log(this.gameState);
 		this.engine.io.emit('gamestate', this.gameState);
 	}
 

@@ -58,7 +58,7 @@ class playerObject extends _mini5Engine.GameObject {
 
   update(delta) {
     var xDisp = 0,
-        yDisp = 0;
+        yDisp = 0; // need to move this to its own `inputManager` game object
 
     if (this.inputState.xState == 'idle') {
       xDisp = 0;

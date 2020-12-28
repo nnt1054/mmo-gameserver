@@ -115,7 +115,7 @@ io.sockets.on('connection', function (socket) {
   Game.connectPlayer(socket, socket.handshake.query.name);
 }); // need to start the game server and pass a pointer to the socket reference
 
-var Game = new _mini5Engine.Engine(_index.default, 'area01', {}, io);
+var Game = new _mini5Engine.Engine(_index.default, 'testScene', {}, io);
 Game.start();
 http.listen(port, function () {
   console.log('listening on *:' + port);

@@ -15,7 +15,7 @@ class testScene extends _mini5Engine.Scene {
     // instantiate game objects
     var background = new _gameObjects.backgroundObject(this);
     var ground = new _gameObjects.blockObject(this, 800 * 2, 32, -800, 400 - 32);
-    var floating = new _gameObjects.blockObject(this, 0, 32, 800 / 2, 400 / 2);
+    var floating = new _gameObjects.blockObject(this, 800 / 2, 32, 800 / 2, 400 / 2);
     var ball = new _gameObjects.bouncingBallObject(this, 'blue'); // var player = new playerObject(this);
 
     this.playerManager = new _gameObjects.playerManagerObject(this); // create layers
@@ -36,7 +36,6 @@ class testScene extends _mini5Engine.Scene {
   }
 
   broadcastUpdates() {
-    // console.log(this.gameState);
     this.engine.io.emit('gamestate', this.gameState);
   }
 
