@@ -1,4 +1,5 @@
 import { GameObject } from 'mini5-engine';
+const fetch = require("node-fetch");
 
 class playerObject extends GameObject {
 
@@ -40,6 +41,8 @@ class playerObject extends GameObject {
         	yState: 'idle',
         }
 
+        this.transitioning = false;
+
   		// this.newCount = 0;
   		// this.count = 0;
   		// const handleCountListener = this.handleCountUpdate.bind(this);
@@ -69,16 +72,7 @@ class playerObject extends GameObject {
 				this.jumpTimer = 1000;
 			}
 		}
-
 		this.jumpTimer -= delta;
-
-		// if (this.yVel) {
-		// 	this.state = 'jumping';
-		// } else if (xDisp) {
-		// 	this.state = 'walking';
-		// } else {
-		// 	this.state = 'idle';
-		// }
 
 		// Resolve Physics Collisions
 		this.yVel += (this.gravity * delta);
@@ -95,19 +89,22 @@ class playerObject extends GameObject {
 		}
 
 		// Resolve Portal Collisions
-		var collisions = this.AABB.checkCollisions(this.scene.portalObjects);
-		var nextScene = null;
-		if (collisions.length > 0) {
-			for (var i = 0; i < collisions.length; i++) {
-	            nextScene = collisions[i].parent.nextScene
+		if (!this.transitioning) {
+			var collisions = this.AABB.checkCollisions(this.scene.portalObjects);
+			var nextScene = null;
+			if (collisions.length > 0) {
+				for (var i = 0; i < collisions.length; i++) {
+		            nextScene = collisions[i].parent.nextScene
+				}
 			}
-		}
-		if (nextScene != null) {	        
-	        console.log("player should switch to scene: " + nextScene);
-	        // this is where we call the startTeleportProcess()
-	        this.startTeleportProcess(nextScene)
-	        	.then((data) => pingGameServer(data))
-	        	.then((url) => broadcastTeleportServer(this.socket, url))
+			if (nextScene != null) {	        
+		        console.log("player should switch to scene: " + nextScene);
+		        this.transitioning = true;
+		        // this is where we call the startTeleportProcess()
+		        this.startTeleportProcess(nextScene)
+		        	.then((data) => this.pingGameServer(data))
+		        	.then((url) => this.broadcastTeleportDestination(this.socket, url))
+			}
 		}
 
 		// this.count = this.newCount;
@@ -122,9 +119,10 @@ class playerObject extends GameObject {
 		this.scene.broadcastTeleport(this.socket, nextScene);
 
 		// ping server manager for the gameserver endpoint corresponding to nextScene
-		let url = 'http://localhost:8081/gameserver?scene=' + nextScene;
+		let url = "http://localhost:8081/gameserver?scene=" + nextScene + "";
 		let response = await fetch(url);
 		let data = await response.json();
+		console.log(data);
 
 		return data
 	}
@@ -132,11 +130,12 @@ class playerObject extends GameObject {
 	async pingGameServer(endpoint) {
 		// http://test.docker-registry.com/test/2/socket.io
 		// http://test.docker-registry.com/test/2/health
-		let url = endpoint.origin + endpoint.pathname;
-		let healthurl = url.split('/').splice(-1, 1).join('/') + 'health'
-		let response = await fetch(url)
+		let url = "http://" + endpoint.origin + endpoint.pathname;
+		let healthurl = url.split('/').slice(0, -1).join('/') + 'health'
+		let response = await fetch(healthurl)
 		let data = await response.json();
 
+		console.log(url);
 		// check if game server health is fine
 		if (data != null) {
 			return url
@@ -145,7 +144,9 @@ class playerObject extends GameObject {
 		}
 	}
 
-
+	async broadcastTeleportDestination(socket, url) {
+		this.scene.broadcastTeleportDestination(socket, url);
+	}
 
 	// Resolves and sets AABB position based on colliding aabb, x-axis displacement, and y axis-displacement
 	handleCollision(aabb, xDisp, yDisp) {

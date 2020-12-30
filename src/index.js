@@ -123,7 +123,11 @@ io.sockets.on(
 );
 
 // need to start the game server and pass a pointer to the socket reference
-var Game = new Engine(SceneList, 'testScene', {}, io);
+var Game = new Engine(SceneList, 'testScene', {}, io, 'server');
+Game.io = io;
+Game.connectPlayer = (socket, username) => {
+	Game.currentScene.connectPlayer(socket, username);
+}
 Game.start();
 
 http.listen(port, function(){
