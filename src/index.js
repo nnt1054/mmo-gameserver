@@ -44,24 +44,6 @@ if (process.env.NODE_ENV == "local" || process.env.NODE_ENV == null) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // const port = process.env.PORT || 8080;
 // var server = app.listen(port);
 
@@ -141,7 +123,11 @@ io.sockets.on(
 );
 
 // need to start the game server and pass a pointer to the socket reference
-var Game = new Engine(SceneList, 'area01', {}, io);
+var Game = new Engine(SceneList, 'testScene', {}, io, 'server');
+Game.io = io;
+Game.connectPlayer = (socket, username) => {
+	Game.currentScene.connectPlayer(socket, username);
+}
 Game.start();
 
 http.listen(port, function(){

@@ -8,14 +8,15 @@
     "build": "babel src -d dist",
     "start": "npm run build && node dist/index.js",
     "local": "npm run build && node dist/index.js 0",
-    "start-local": "(npm run build && node dist/index.js 0) & node dist/index.js 1 & node dist/index.js 2"
+    "start-local": "(npm run build && REACT_APP_MODE=server node dist/index.js 0) & REACT_APP_MODE=server node dist/index.js 1 & REACT_APP_MODE=server node dist/index.js 2"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "mini5-engine": "^1.0.2",
+    "mini5-engine": "file:../mini5-engine",
+    "node-fetch": "^2.6.1",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {

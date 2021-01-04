@@ -11,6 +11,8 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
+var fetch = require("node-fetch");
+
 class playerObject extends _mini5Engine.GameObject {
   constructor(scene, socket, name, parent) {
     super(scene, parent);
@@ -47,7 +49,8 @@ class playerObject extends _mini5Engine.GameObject {
     this.inputState = {
       xState: 'idle',
       yState: 'idle'
-    }; // this.newCount = 0;
+    };
+    this.transitioning = false; // this.newCount = 0;
     // this.count = 0;
     // const handleCountListener = this.handleCountUpdate.bind(this);
     // this.countUnsubscribe = store.subscribe(handleCountListener);
@@ -58,7 +61,7 @@ class playerObject extends _mini5Engine.GameObject {
 
   update(delta) {
     var xDisp = 0,
-        yDisp = 0;
+        yDisp = 0; // need to move this to its own `inputManager` game object
 
     if (this.inputState.xState == 'idle') {
       xDisp = 0;
@@ -75,14 +78,7 @@ class playerObject extends _mini5Engine.GameObject {
       }
     }
 
-    this.jumpTimer -= delta; // if (this.yVel) {
-    // 	this.state = 'jumping';
-    // } else if (xDisp) {
-    // 	this.state = 'walking';
-    // } else {
-    // 	this.state = 'idle';
-    // }
-    // Resolve Physics Collisions
+    this.jumpTimer -= delta; // Resolve Physics Collisions
 
     this.yVel += this.gravity * delta;
     yDisp = this.yVel * delta + this.gravity * Math.pow(delta, 2);
@@ -99,19 +95,22 @@ class playerObject extends _mini5Engine.GameObject {
     } // Resolve Portal Collisions
 
 
-    var collisions = this.AABB.checkCollisions(this.scene.portalObjects);
-    var nextScene = null;
+    if (!this.transitioning) {
+      var collisions = this.AABB.checkCollisions(this.scene.portalObjects);
+      var nextScene = null;
 
-    if (collisions.length > 0) {
-      for (var i = 0; i < collisions.length; i++) {
-        nextScene = collisions[i].parent.nextScene;
+      if (collisions.length > 0) {
+        for (var i = 0; i < collisions.length; i++) {
+          nextScene = collisions[i].parent.nextScene;
+        }
       }
-    }
 
-    if (nextScene != null) {
-      console.log("player should switch to scene: " + nextScene); // this is where we call the startTeleportProcess()
+      if (nextScene != null) {
+        console.log("player should switch to scene: " + nextScene);
+        this.transitioning = true; // this is where we call the startTeleportProcess()
 
-      this.startTeleportProcess(nextScene).then(data => pingGameServer(data)).then(url => broadcastTeleportServer(this.socket, url));
+        this.startTeleportProcess(nextScene).then(data => this.pingGameServer(data)).then(url => this.broadcastTeleportDestination(this.socket, url));
+      }
     } // this.count = this.newCount;
     // this.gameState = this.parent.gameState[this.name] = {x: this.x, y: this.y, connected: true};
 
@@ -128,9 +127,10 @@ class playerObject extends _mini5Engine.GameObject {
       _this.scene.broadcastTeleport(_this.socket, nextScene); // ping server manager for the gameserver endpoint corresponding to nextScene
 
 
-      var url = 'http://localhost:8081/gameserver?scene=' + nextScene;
+      var url = "http://localhost:8081/gameserver?scene=" + nextScene + "";
       var response = yield fetch(url);
       var data = yield response.json();
+      console.log(data);
       return data;
     })();
   }
@@ -139,16 +139,25 @@ class playerObject extends _mini5Engine.GameObject {
     return _asyncToGenerator(function* () {
       // http://test.docker-registry.com/test/2/socket.io
       // http://test.docker-registry.com/test/2/health
-      var url = endpoint.origin + endpoint.pathname;
-      var healthurl = url.split('/').splice(-1, 1).join('/') + 'health';
-      var response = yield fetch(url);
-      var data = yield response.json(); // check if game server health is fine
+      var url = "http://" + endpoint.origin + endpoint.pathname;
+      var healthurl = url.split('/').slice(0, -1).join('/') + 'health';
+      var response = yield fetch(healthurl);
+      var data = yield response.json();
+      console.log(url); // check if game server health is fine
 
       if (data != null) {
         return url;
       } else {
         return url;
       }
+    })();
+  }
+
+  broadcastTeleportDestination(socket, url) {
+    var _this2 = this;
+
+    return _asyncToGenerator(function* () {
+      _this2.scene.broadcastTeleportDestination(socket, url);
     })();
   } // Resolves and sets AABB position based on colliding aabb, x-axis displacement, and y axis-displacement
 
