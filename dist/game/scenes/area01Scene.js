@@ -37,7 +37,6 @@ class area01Scene extends _mini5Engine.Scene {
   }
 
   broadcastUpdates() {
-    // console.log(this.gameState);
     this.engine.io.emit('gamestate', this.gameState);
   }
 
