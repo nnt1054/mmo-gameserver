@@ -9,24 +9,25 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var express = require('express');
 
 if (process.env.NODE_ENV == "local" || process.env.NODE_ENV == null) {
-  // if (process.env.NODE_ENV == "local" ) {
-  var index = parseInt(process.argv[2]);
-  var port = 8000 + index;
+  var server_id = process.argv[2];
+  var port = 8000;
+  var serverApp = express();
   var app = express();
+  serverApp.use("/gs/".concat(server_id, "/"), app);
 
   var cors = require('cors');
 
-  app.use(cors());
+  serverApp.use(cors());
 
-  var http = require('http').Server(app); // docker build stuff
-
+  var http = require('http').Server(serverApp);
 
   var io = require('socket.io')(http, {
     origins: '*:*',
-    resource: index + '/socket.io'
-  });
-} else if (process.env.NODE_ENV == "development") {
-  var index = process.env.MY_POD_NAME.slice(-1)[0];
+    path: "/gs/".concat(server_id, "/socket.io")
+  }); // } else if (process.env.NODE_ENV == "development") {
+
+} else if (false) {
+  var server_id = process.env.MY_POD_NAME.slice(-1)[0];
   var port = process.env.PORT || 80;
   var app = express();
 
@@ -39,7 +40,7 @@ if (process.env.NODE_ENV == "local" || process.env.NODE_ENV == null) {
 
   var io = require('socket.io')(http, {
     origins: '*:*',
-    resource: '/test/' + index + '/socket.io'
+    resource: '/test/' + server_id + '/socket.io'
   });
 } else if (process.env.NODE_ENV == "production") {} else {
   throw new Error("Something went badly wrong!");
@@ -80,20 +81,30 @@ app.get('/assign', function (req, res) {
   var scene = req.query.scene;
 
   if (scene == null) {
-    res.send('no scene defined');
+    res.json({
+      error: 'no scene defined'
+    });
   } else if (state == states.IDLE) {
     if (scene in _index.default) {
       Game.currentScene.switchScene(scene, {});
       state = states.ACTIVE;
       active_scene = scene;
-      res.send('assignment received: ' + scene);
+      res.json({
+        success: 'assignment received: ' + scene
+      });
     } else {
-      res.send('assignment does not exist: ' + scene);
+      res.json({
+        error: 'assignment does not exist: ' + scene
+      });
     }
   } else if (state == states.ACTIVE) {
-    res.send('server is already running: ' + active_scene);
+    res.json({
+      error: 'server is already running: ' + active_scene
+    });
   } else {
-    res.send('something went wrong ; )');
+    res.json({
+      error: 'something went wrong!'
+    });
   }
 }); // var io = require('socket.io')(server, { origins: '*:*'});
 // io.origins('*:*');
@@ -111,8 +122,7 @@ io.sockets.on('connection', function (socket) {
     return;
   }
 
-  console.log('new socket poggies: ' + socket.id);
-  Game.connectPlayer(socket, socket.handshake.query.name);
+  console.log('new socket poggies: ' + socket.id); // Game.connectPlayer(socket, socket.handshake.query.name);
 }); // need to start the game server and pass a pointer to the socket reference
 
 var Game = new _mini5Engine.Engine(_index.default, 'testScene', {}, io, 'server');

@@ -11,7 +11,6 @@ var _gameObjects = require("../gameObjects/");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// import gameObjects
 class testScene extends _baseScene.default {
   setup(args) {
     super.setup(args); // instantiate game objects
@@ -33,25 +32,7 @@ class testScene extends _baseScene.default {
     this.portalObjects = [portal.AABB]; // add initial game objects
 
     this.gameObjects = [background, ball];
-  } // broadcastUpdates() {
-  // 	this.engine.io.emit('gamestate', this.gameState);
-  // }
-  // broadcastTeleport(socket, scene) {
-  // 	socket.emit('playerTeleportStart', {
-  // 		scene_name: scene,
-  // 	})
-  // }
-  // broadcastTeleportDestination(socket, url) {
-  // 	console.log(url);
-  // 	socket.emit('playerTeleportDestination', {
-  // 		url: url,
-  // 	})
-  // }
-  // connectPlayer(socket, username) {
-  // 	console.log('ideally we conenct ' + username);
-  // 	this.playerManager.addPlayer(socket, username);
-  // }
-
+  }
 
 }
 

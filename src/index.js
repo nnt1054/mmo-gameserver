@@ -3,39 +3,36 @@ import SceneList from './game/scenes/index'
 var express = require('express');
 
 if (process.env.NODE_ENV == "local" || process.env.NODE_ENV == null) {
- // if (process.env.NODE_ENV == "local" ) {
 
-	var index = parseInt(process.argv[2]);
-	var port = 8000 + index;
+	var server_id = process.argv[2];
+	var port = 8000;
 
+	var serverApp = express();
 	var app = express();
+	serverApp.use(`/gs/${server_id}/`, app);
+
 	var cors = require('cors');
-	app.use(cors());
+	serverApp.use(cors());
 
-	var http = require('http').Server(app);
-
-	// docker build stuff
+	var http = require('http').Server(serverApp);
 	var io = require('socket.io')(http, {
 		origins: '*:*',
-		resource: index + '/socket.io',
+		path: `/gs/${server_id}/socket.io`,
 	});
 
-} else if (process.env.NODE_ENV == "development") {
+// } else if (process.env.NODE_ENV == "development") {
+} else if (false) {
 
-	var index = process.env.MY_POD_NAME.slice(-1)[0];
-
+	var server_id = process.env.MY_POD_NAME.slice(-1)[0];
 	var port = process.env.PORT || 80;
-
 	var app = express();
 	var cors = require('cors');
 	app.use(cors());
-
 	var http = require('http').Server(app);
-
 	// docker build stuff
 	var io = require('socket.io')(http, {
 		origins: '*:*',
-		resource: '/test/' + index + '/socket.io',
+		resource: '/test/' + server_id + '/socket.io',
 	});
 
 } else if (process.env.NODE_ENV == "production") {
@@ -82,20 +79,30 @@ app.get('/state', function(req, res) {
 app.get('/assign', function (req, res) {
 	var scene = req.query.scene
 	if (scene == null) {
-		res.send('no scene defined')
+		res.json({
+			error: 'no scene defined'
+		})
 	} else if (state == states.IDLE) {
 		if (scene in SceneList) {
 			Game.currentScene.switchScene(scene, {});
 			state = states.ACTIVE;
 			active_scene = scene;
-			res.send('assignment received: ' + scene)
+			res.json({
+				success: 'assignment received: ' + scene
+			})
 		} else {
-			res.send('assignment does not exist: ' + scene)
+			res.json({
+				error: 'assignment does not exist: ' + scene
+			})
 		}
 	} else if (state == states.ACTIVE) {
-		res.send('server is already running: ' + active_scene)
+		res.json({
+			error: 'server is already running: ' + active_scene
+		})
 	} else {
-		res.send('something went wrong ; )')
+		res.json({
+			error: 'something went wrong!'
+		})
 	}
 })
 
@@ -118,7 +125,7 @@ io.sockets.on(
 			return;
 		}
 		console.log('new socket poggies: ' + socket.id);
-		Game.connectPlayer(socket, socket.handshake.query.name);
+		// Game.connectPlayer(socket, socket.handshake.query.name);
 	}
 );
 
