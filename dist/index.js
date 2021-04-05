@@ -122,7 +122,8 @@ io.sockets.on('connection', function (socket) {
     return;
   }
 
-  console.log('new socket poggies: ' + socket.id); // Game.connectPlayer(socket, socket.handshake.query.name);
+  console.log('new socket poggies: ' + socket.id);
+  Game.connectPlayer(socket, socket.handshake.query.name);
 }); // need to start the game server and pass a pointer to the socket reference
 
 var Game = new _mini5Engine.Engine(_index.default, 'testScene', {}, io, 'server');

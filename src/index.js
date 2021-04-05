@@ -125,7 +125,7 @@ io.sockets.on(
 			return;
 		}
 		console.log('new socket poggies: ' + socket.id);
-		// Game.connectPlayer(socket, socket.handshake.query.name);
+		Game.connectPlayer(socket, socket.handshake.query.name);
 	}
 );
 

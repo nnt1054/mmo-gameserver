@@ -20,8 +20,8 @@ class playerObject extends _mini5Engine.GameObject {
     this.draw = this.draw.bind(this);
     this.socket = socket;
     this.name = name;
-    this.x = 64;
-    this.y = 0;
+    this.x = 200;
+    this.y = 296;
     this.xVel = 10;
     this.yVel = 0;
     this.gravity = 0.005;
