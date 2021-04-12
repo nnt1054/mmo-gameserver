@@ -43,7 +43,7 @@ class area02Scene extends Scene {
 
 	broadcastUpdates() {
 		// console.log(this.gameState);
-		this.engine.io.emit('gamestate', this.gameState);
+		this.engine.emit('gamestate', this.gameState);
 	}
 
 	connectPlayer(socket, username) {

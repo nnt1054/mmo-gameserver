@@ -4,7 +4,6 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "babel src -d dist",
     "start": "npm run build && node dist/index.js",
     "local": "npm run build && node dist/index.js 0001",

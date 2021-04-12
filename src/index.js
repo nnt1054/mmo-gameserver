@@ -1,142 +1,58 @@
-import { Engine } from 'mini5-engine'
-import SceneList from './game/scenes/index'
-var express = require('express');
+import express from 'express';
 
-if (process.env.NODE_ENV == "local" || process.env.NODE_ENV == null) {
+// import config from './config';
+import generateGameServer from './app'
 
-	var server_id = process.argv[2];
-	var port = 8000;
+async function startServer() {
 
-	var serverApp = express();
-	var app = express();
-	serverApp.use(`/gs/${server_id}/`, app);
+  var server_ids = ['0001', '0002'];
+  var config = {
+    port: 8000,
+  }
 
-	var cors = require('cors');
-	serverApp.use(cors());
-
-	var http = require('http').Server(serverApp);
-	var io = require('socket.io')(http, {
-		origins: '*:*',
-		path: `/gs/${server_id}/socket.io`,
-	});
-
-// } else if (process.env.NODE_ENV == "development") {
-} else if (false) {
-
-	var server_id = process.env.MY_POD_NAME.slice(-1)[0];
-	var port = process.env.PORT || 80;
-	var app = express();
-	var cors = require('cors');
-	app.use(cors());
-	var http = require('http').Server(app);
-	// docker build stuff
-	var io = require('socket.io')(http, {
-		origins: '*:*',
-		resource: '/test/' + server_id + '/socket.io',
-	});
-
-} else if (process.env.NODE_ENV == "production") {
-} else {
-	throw new Error("Something went badly wrong!");
+  const app = express()
+  const http = require('http').Server(app);
+  for (var i = 0; i < server_ids.length; i++) {
+    var server_id = server_ids[i];
+    let gameServerApp = await generateGameServer();
+    app.use(`/gs/${ server_id }`, gameServerApp);
+  }
+  
+  const server = http.listen(config.port);
+  server.on('error', onError);
+  server.on('listening', () => onListening(server));
 }
 
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
 
-// const port = process.env.PORT || 8080;
-// var server = app.listen(port);
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
 
-// app.use(express.static('client-build'));
-app.get('/', function(req, res) {
-	res.json({
-		hey: 'lmao',
-	})
-})
-app.get('/printenv', function(req, res) {
-  res.json(process.env);
-})
-app.get('/health', function(req, res) {
-  res.json({
-  	status: 'ok :)',
-  });
-})
-console.log('App is listening on port ' + port);
-
-const states = {
-	IDLE: "IDLE",
-	ACTIVE: "ACTIVE",
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
 }
-var state = states.IDLE
-var active_scene = "idle";
 
-app.get('/state', function(req, res) {
-  res.json({
-  	state: state,
-  	scene: active_scene,
-  });
-})
-
-// change back to post later pls
-// app.post('/assign', function (req, res) {
-app.get('/assign', function (req, res) {
-	var scene = req.query.scene
-	if (scene == null) {
-		res.json({
-			error: 'no scene defined'
-		})
-	} else if (state == states.IDLE) {
-		if (scene in SceneList) {
-			Game.currentScene.switchScene(scene, {});
-			state = states.ACTIVE;
-			active_scene = scene;
-			res.json({
-				success: 'assignment received: ' + scene
-			})
-		} else {
-			res.json({
-				error: 'assignment does not exist: ' + scene
-			})
-		}
-	} else if (state == states.ACTIVE) {
-		res.json({
-			error: 'server is already running: ' + active_scene
-		})
-	} else {
-		res.json({
-			error: 'something went wrong!'
-		})
-	}
-})
-
-// var io = require('socket.io')(server, { origins: '*:*'});
-// io.origins('*:*');
-// io.set('origins', '*:*');
-
-function heartbeat() {
-	io.sockets.emit('heartbeat', ':)')
+function onListening(server) {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  console.debug('Listening on ' + bind);
 }
-setInterval(heartbeat, 1000);
 
-io.sockets.on(
-	'connection',
-	function(socket) {
-
-		if (state == states.IDLE) {
-			// check server status
-			socket.disconnect();
-			return;
-		}
-		console.log('new socket poggies: ' + socket.id);
-		Game.connectPlayer(socket, socket.handshake.query.name);
-	}
-);
-
-// need to start the game server and pass a pointer to the socket reference
-var Game = new Engine(SceneList, 'testScene', {}, io, 'server');
-Game.io = io;
-Game.connectPlayer = (socket, username) => {
-	Game.currentScene.connectPlayer(socket, username);
-}
-Game.start();
-
-http.listen(port, function(){
-  console.log('listening on *:' + port);
-});
+startServer()

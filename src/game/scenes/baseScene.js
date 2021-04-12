@@ -19,7 +19,7 @@ class baseScene extends Scene {
 	}
 
 	broadcastUpdates() {
-		this.engine.io.emit('gamestate', this.gameState);
+		this.engine.emit('gamestate', this.gameState);
 	}
 
 	broadcastTeleport(socket, scene) {
