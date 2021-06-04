@@ -27,9 +27,16 @@ class playerManagerObject extends GameObject {
 	}
 
 	addPlayer(socket, username) {
-		console.log("adding player object" + socket.id)
+		console.log("adding player object: " + socket.id)
 		this.connectedPlayers.push(new playerObject(this.scene, socket, username, this))
+		console.log(this.connectedPlayers);
 	}
+
+	disconnectPlayer(username) {
+		console.log('disconnectPlayer: ' + username)
+		this.connectedPlayers = this.connectedPlayers.filter(player => player.name != username);
+	}
+
 }
 
 export default playerManagerObject;

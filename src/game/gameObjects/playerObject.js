@@ -54,9 +54,13 @@ class playerObject extends GameObject {
 	// }
 
 	update(delta) {
+
+		if (!this.gameState.connected) {
+        	return;
+		}
+
 		var xDisp = 0,
 		yDisp = 0;
-
 
 		// need to move this to its own `inputManager` game object
 		if (this.inputState.xState == 'idle') {
@@ -97,21 +101,17 @@ class playerObject extends GameObject {
 		            nextScene = collisions[i].parent.nextScene
 				}
 			}
-			if (nextScene != null) {	        
+			if (nextScene != null) {
 		        console.log("player should switch to scene: " + nextScene);
 		        this.transitioning = true;
-		        // this is where we call the startTeleportProcess()
 		        this.startTeleportProcess(nextScene)
 		        	.then((data) => this.pingGameServer(data))
 		        	.then((url) => this.broadcastTeleportDestination(this.socket, url))
 			}
 		}
 
-		// this.count = this.newCount;
-		// this.gameState = this.parent.gameState[this.name] = {x: this.x, y: this.y, connected: true};
 		this.gameState.x = this.x;
 		this.gameState.y = this.y;
-
 	}
 
 	async startTeleportProcess(nextScene) {
@@ -119,23 +119,19 @@ class playerObject extends GameObject {
 		this.scene.broadcastTeleport(this.socket, nextScene);
 
 		// ping server manager for the gameserver endpoint corresponding to nextScene
-		let url = "http://localhost:8081/gameserver?scene=" + nextScene + "";
+		let url = 'http://localhost:3000/manager/gameserver?scene=' + nextScene;
 		let response = await fetch(url);
 		let data = await response.json();
-		console.log(data);
 
 		return data
 	}
 
 	async pingGameServer(endpoint) {
-		// http://test.docker-registry.com/test/2/socket.io
-		// http://test.docker-registry.com/test/2/health
-		let url = "http://" + endpoint.origin + endpoint.pathname;
-		let healthurl = url.split('/').slice(0, -1).join('/') + 'health'
+		let url = endpoint.origin + endpoint.pathname;
+		let healthurl = url.split('/').slice(0, -1).join('/') + '/state'
 		let response = await fetch(healthurl)
 		let data = await response.json();
 
-		console.log(url);
 		// check if game server health is fine
 		if (data != null) {
 			return url
@@ -178,6 +174,7 @@ class playerObject extends GameObject {
 		}
 		this.yVel = 0;
 	}
+
 	// helper function for handleCollision
 	handleXCollision(aabb) {
 		if (this.AABB.ifLeftCollision(aabb)) {

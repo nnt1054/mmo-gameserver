@@ -6,7 +6,7 @@ class ServerEngine extends Engine {}
 ServerEngine.prototype.io = function(io) {
 	this.locals.io = io;
 	io.on('connection', (socket) => {
-		console.log(this);
+		console.log('connecting new player');
 		this.connectPlayer(socket);
 	});
 }
