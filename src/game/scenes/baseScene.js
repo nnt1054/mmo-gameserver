@@ -14,9 +14,17 @@ class baseScene extends Scene {
 
 	    this.healthPing = this.healthPing.bind(this);
 	    this.intervals.push(setInterval(this.healthPing, 1000));
+
+	    this.timer = 0
+	    this.name = 'baseScene';
 	}
 
 	update(delta) {
+		this.timer += delta;
+		if (this.timer > 15000) {
+			console.log(this.timer + ' ' + this.name) ;
+			this.timer = 0;
+		}
 		try {
 			this.playerManager.update(delta);
 			super.update(delta);
@@ -40,6 +48,7 @@ class baseScene extends Scene {
 	}
 
 	broadcastTeleportDestination(socket, url) {
+		console.log('emitting player teleport');
 		socket.emit('playerTeleportDestination', {
 			url: url,
 		})

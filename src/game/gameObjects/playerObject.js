@@ -122,7 +122,7 @@ class playerObject extends GameObject {
 		let url = 'http://localhost:3000/manager/gameserver?scene=' + nextScene;
 		let response = await fetch(url);
 		let data = await response.json();
-
+		console.log('started teleport process');
 		return data
 	}
 
@@ -131,7 +131,7 @@ class playerObject extends GameObject {
 		let healthurl = url.split('/').slice(0, -1).join('/') + '/state'
 		let response = await fetch(healthurl)
 		let data = await response.json();
-
+		console.log('pinged game server');
 		// check if game server health is fine
 		if (data != null) {
 			return url
@@ -141,6 +141,7 @@ class playerObject extends GameObject {
 	}
 
 	async broadcastTeleportDestination(socket, url) {
+		console.log('broadcasting teleport destination (playerObject.js)')
 		this.scene.broadcastTeleportDestination(socket, url);
 	}
 

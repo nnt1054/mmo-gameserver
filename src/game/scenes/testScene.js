@@ -34,6 +34,7 @@ class testScene extends baseScene {
 
 	    // add initial game objects
 	    this.gameObjects = [background, ball];
+	    this.name = 'testScene';
 	}
 
 }

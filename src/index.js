@@ -5,7 +5,7 @@ import generateGameServer from './app'
 
 async function startServer() {
 
-  var server_ids = ['0001', '0002'];
+  var server_ids = ['0001', '0002', '0003'];
   var config = {
     port: 8000,
   }
