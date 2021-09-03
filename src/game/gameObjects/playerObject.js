@@ -3,12 +3,12 @@ const fetch = require("node-fetch");
 
 class playerObject extends GameObject {
 
-	constructor(scene, socket, name, parent) {
+	constructor(scene, socketId, name, parent) {
 	    super(scene, parent)
   		this.update = this.update.bind(this);
   		this.draw = this.draw.bind(this);
 
-  		this.socket = socket;
+  		this.socketId = socketId;
   		this.name = name;
 
   		this.x = 200;
@@ -29,29 +29,17 @@ class playerObject extends GameObject {
   		}
 
         this.gameState = this.parent.gameState[this.name] = {x: this.x, y: this.y, connected: true};
-        socket.on('inputState', (data) => {
-        	this.inputState = data;
-        })
-        socket.on('disconnect', (reason) => {
-        	console.log("dc: " + reason);
-        	this.gameState.connected = false;
-        })
         this.inputState = {
         	xState: 'idle',
         	yState: 'idle',
         }
 
         this.transitioning = false;
-
-  		// this.newCount = 0;
-  		// this.count = 0;
-  		// const handleCountListener = this.handleCountUpdate.bind(this);
-  		// this.countUnsubscribe = store.subscribe(handleCountListener);
 	}
 
-	// handleCountUpdate() {
-	// 	this.newCount = selectCount(store.getState());
-	// }
+	updateInputState(data) {
+		this.inputState = data;
+	}
 
 	update(delta) {
 
@@ -106,7 +94,7 @@ class playerObject extends GameObject {
 		        this.transitioning = true;
 		        this.startTeleportProcess(nextScene)
 		        	.then((data) => this.pingGameServer(data))
-		        	.then((url) => this.broadcastTeleportDestination(this.socket, url))
+		        	.then((url) => this.broadcastTeleportDestination(this.socketId, url))
 			}
 		}
 
@@ -116,7 +104,7 @@ class playerObject extends GameObject {
 
 	async startTeleportProcess(nextScene) {
 		// broadcast teleport update to the client to transition to idle scene
-		this.scene.broadcastTeleport(this.socket, nextScene);
+		this.scene.broadcastTeleport(this.socketId, nextScene);
 
 		// ping server manager for the gameserver endpoint corresponding to nextScene
 		let url = 'http://localhost:3000/manager/gameserver?scene=' + nextScene;
@@ -140,9 +128,9 @@ class playerObject extends GameObject {
 		}
 	}
 
-	async broadcastTeleportDestination(socket, url) {
+	async broadcastTeleportDestination(socketId, url) {
 		console.log('broadcasting teleport destination (playerObject.js)')
-		this.scene.broadcastTeleportDestination(socket, url);
+		this.scene.broadcastTeleportDestination(socketId, url);
 	}
 
 	// Resolves and sets AABB position based on colliding aabb, x-axis displacement, and y axis-displacement

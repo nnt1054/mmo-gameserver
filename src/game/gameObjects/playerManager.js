@@ -10,31 +10,43 @@ class playerManagerObject extends GameObject {
   		this.draw = this.draw.bind(this);
 
 		this.gameState = this.parent.gameState['playerManager'] = {};
-  		this.connectedPlayers = [];
+  		this.connectedPlayers = {};
   		this.count = 0
 	}
 
 	update(delta) {
-		for (var i = 0; i < this.connectedPlayers.length; i++) {
-			this.connectedPlayers[i].update(delta);
+		for (const [socketId, player] of this.connectedPlayers.entries()) {
+			player.update(delta)
 		}
 	}
 
 	draw(interpolationPercentage) {
-		for (var i = 0; i < this.connectedPlayers.length; i++) {
-			this.connectedPlayers[i].draw(interpolationPercentage);
+		for (const [socketId, player] of this.connectedPlayers.entries()) {
+			player.draw(interpolationPercentage);
 		}
 	}
 
 	addPlayer(socket, username) {
 		console.log("adding player object: " + socket.id)
-		this.connectedPlayers.push(new playerObject(this.scene, socket, username, this))
-		console.log(this.connectedPlayers);
+		this.connectedPlayers[socket.id] = new playerObject(this.scene, socket, username, this)
 	}
 
-	disconnectPlayer(username) {
+	updatePlayerInputState(socketId, data) {
+		if (socketId in this.connectedPlayers) {
+			this.connectedPlayers[socketId].updateInputState(data)
+		} else {
+			console.log('something went wrong updating player input state')
+		}
+	}
+
+	disconnectPlayer(socketId) {
 		console.log('disconnectPlayer: ' + username)
-		this.connectedPlayers = this.connectedPlayers.filter(player => player.name != username);
+		if (socketId in this.connectedPlayers) {
+			delete this.connectedPlayers[socketId];
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }
