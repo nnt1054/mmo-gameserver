@@ -4,17 +4,17 @@ import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 
 class ServerEngine extends Engine {}
 
-ServerEngine.prototype.io = function(io) {
+ServerEngine.prototype.io = function() {
 	parentPort.on('message', (event) => {
 		switch(event.name) {
 			case 'connection':
-				this.connectPlayer(event.data)
+				this.connectPlayer(event.socketId, event.username);
 				break;
 			case 'inputState':
-		       	this.currentScene?.updatePlayerInputState(event.socket, event.data);
+		       	this.currentScene?.updatePlayerInputState(event.socketId, event.data);
 				break;
 			case 'disconnect':
-				this.currentScene?.disconnectPlayer(event.socket)
+				this.currentScene?.disconnectPlayer(event.socketId);
 				break;
 			default:
 				console.log('unrecognized message');
@@ -43,8 +43,8 @@ ServerEngine.prototype.closeServer = function() {
 	console.log('peepoo, trying to close server');
 }
 
-ServerEngine.prototype.connectPlayer = function(socketId) {
-	this.currentScene.connectPlayer(socketId, socket.handshake.query.name);
+ServerEngine.prototype.connectPlayer = function(socketId, username) {
+	this.currentScene.connectPlayer(socketId, username);
 }
 
 if (isMainThread) {
@@ -56,40 +56,41 @@ if (isMainThread) {
 			    origin: "*:*",
 			}
 		});
-		return new Promise((resolve, reject) => {
-			const worker = new Worker(__filename, {
-				workerData: initScene
-			});
-			// messages to be received from the game engine
-			// aka messages the game engine wants to send to the client(s)
-			worker.on('message', (event) => {
-				switch(event.name) {
-					case 'broadcast':
-						io.emit(event.name, event.data)
-						break;
-					case 'message':
-						io.to(event.socketId).emit(event.name, event.data)
-						break;
-					default:
-						console.log('somethings wrong lol')
-				}
-			});
-			worker.on('error', reject);
-			worker.on('exit', (code) => {
-				if (code !== 0) {
-					reject(new Error(`Worker stopped with exit code ${code}`));
-				}
-			});
 
-		})
-		var io = require('socket.io')({
-			cors: {
-			    origin: "*:*",
+		const worker = new Worker(__filename, {
+			workerData: initScene
+		});
+
+		// messages to be received from the game engine
+		// aka messages the game engine wants to send to the client(s)
+		worker.on('message', (event) => {
+			switch(event.type) {
+				case 'broadcast':
+					io.emit(event.name, event.data)
+					break;
+				case 'message':
+					io.to(event.socketId).emit(event.name, event.data)
+					break;
+				default:
+					console.log('somethings wrong lol');
+					console.log(event);
 			}
 		});
+		worker.on('error', (error) => {
+			console.log(error);
+			console.log('damn we got an error');
+		});
+		worker.on('exit', (code) => {
+			if (code !== 0) {
+				console.log(`Worker stopped with exit code ${code}`);
+			}
+		});
+
 		io.on('connection', (socket) => {
 			worker.postMessage({
 				name: 'connection',
+				socketId: socket.id,
+				username: socket.handshake.query.name,
 				data: {}
 			})
 			socket.on('inputState', (data) => {
@@ -101,19 +102,16 @@ if (isMainThread) {
 			})
 			socket.on('disconnect', (reason) => {
 				console.log("dc: " + reason);
-				// this = playerObject
-				this.gameState.connected = false;
 			})
 		});
-		// Game.io(io);
-
-		return { game: Game, io: io };
+		return { game: null, io: io };
 	}
 
-	export default generateServerEngine;
+	// export default generateServerEngine;
+	module.exports = generateServerEngine;
 
 } else {
-	// everything that happens in a new thread happens here
-	var Game = new ServerEngine(SceneList, initScene, ServerEngine.MODE_SERVER, {});
-
+	var Game = new ServerEngine(SceneList, workerData, ServerEngine.MODE_SERVER, {});
+	Game.io()
+	Game.start()
 }

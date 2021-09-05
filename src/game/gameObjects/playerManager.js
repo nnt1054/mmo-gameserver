@@ -15,20 +15,20 @@ class playerManagerObject extends GameObject {
 	}
 
 	update(delta) {
-		for (const [socketId, player] of this.connectedPlayers.entries()) {
-			player.update(delta)
+		for (let socketId in this.connectedPlayers) {
+			this.connectedPlayers[socketId].update(delta)
 		}
 	}
 
 	draw(interpolationPercentage) {
-		for (const [socketId, player] of this.connectedPlayers.entries()) {
-			player.draw(interpolationPercentage);
+		for (let socketId in this.connectedPlayers) {
+			this.connectedPlayers[socketId].draw(interpolationPercentage);
 		}
 	}
 
-	addPlayer(socket, username) {
-		console.log("adding player object: " + socket.id)
-		this.connectedPlayers[socket.id] = new playerObject(this.scene, socket, username, this)
+	addPlayer(socketId, username) {
+		console.log("adding player object: " + socketId)
+		this.connectedPlayers[socketId] = new playerObject(this.scene, socketId, username, this)
 	}
 
 	updatePlayerInputState(socketId, data) {

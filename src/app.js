@@ -57,7 +57,6 @@ async function generateGameServer() {
 				let { game, io } = await generateServerEngine(scene);
 				io.path(`${ req.app.mountpath }/socket.io`);
 				io.attach(req.connection.server);
-				game.start();
 
 				req.app.locals.game = game;
 				req.app.locals.state = states.ACTIVE;
